@@ -16,6 +16,7 @@ class Settings:
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "90"))
+    llm_delay_seconds: float = float(os.getenv("LLM_DELAY_SECONDS", "4"))
 
     def require_database_url(self) -> str:
         if not self.database_url:

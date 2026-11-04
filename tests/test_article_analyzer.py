@@ -107,3 +107,7 @@ def test_artigo_sem_resumo_nao_e_analisado(config, article):
     article.abstract = None
     with pytest.raises(AnalysisError):
         ArticleAnalyzer(FakeLLM(llm_data()), config).analyze(article)
+
+
+def test_expoe_o_nome_do_modelo(config):
+    assert ArticleAnalyzer(FakeLLM(llm_data()), config).model_name == "fake-model"

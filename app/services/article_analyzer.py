@@ -13,6 +13,10 @@ class ArticleAnalyzer:
         self._llm = llm
         self._config = config
 
+    @property
+    def model_name(self) -> str:
+        return self._llm.model_name
+
     def analyze(self, article: Article) -> AnalysisResult:
         if not (article.abstract or "").strip():
             raise AnalysisError("O artigo não tem resumo; não há o que analisar.")
