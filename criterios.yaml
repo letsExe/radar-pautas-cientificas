@@ -1,0 +1,60 @@
+versao: "v1"
+
+# Cada critério recebe nota de 0 a 10; o score final é a média ponderada pelos pesos.
+# Score a partir de limiar_destaque é marcado como "destaque" na interface.
+limiar_destaque: 6.5
+max_chars_resumo: 3000
+
+criterios:
+  - id: interesse_publico
+    nome: Interesse público
+    peso: 0.55
+    descricao: >
+      O tema afeta ou interessa à população em geral (saúde, educação, meio ambiente,
+      economia, direitos, cotidiano)?
+    nota_alta: Resultado com efeito direto sobre a vida de muitas pessoas.
+    nota_baixa: Tema restrito a especialistas, sem conexão com o cotidiano.
+
+  - id: relevancia_social
+    nome: Relevância social
+    peso: 0.20
+    descricao: >
+      A pesquisa trata de um problema social relevante (desigualdades, direitos,
+      políticas públicas, grupos vulneráveis)?
+    nota_alta: Aborda diretamente um problema social atual.
+    nota_baixa: Sem relação com questões sociais.
+
+  - id: novidade
+    nome: Novidade
+    peso: 0.15
+    descricao: >
+      O resultado é novo, inesperado ou inédito, ou contraria o senso comum?
+    nota_alta: Primeira ocorrência, descoberta ou resultado surpreendente.
+    nota_baixa: Confirma o que já é amplamente conhecido.
+
+  - id: proximidade_regional
+    nome: Proximidade regional
+    peso: 0.15
+    descricao: >
+      Há relação com Foz do Iguaçu, a tríplice fronteira, o Paraná, o Mercosul
+      ou a integração latino-americana?
+    nota_alta: Estuda diretamente a região, a fronteira ou comunidades locais.
+    nota_baixa: Nenhuma conexão geográfica ou temática com a região.
+
+  - id: impacto
+    nome: Impacto
+    peso: 0.15
+    descricao: >
+      A pesquisa tem aplicação prática ou pode orientar decisões (tecnologia,
+      saúde, políticas, soluções para problemas concretos)?
+    nota_alta: Propõe solução, diagnóstico ou dado que pode orientar decisões concretas.
+    nota_baixa: Contribuição puramente teórica ou metodológica.
+
+  - id: comunicabilidade
+    nome: Comunicabilidade e acessibilidade da linguagem
+    peso: 0.15
+    descricao: >
+      Dá para explicar a descoberta a um público não especializado em poucas frases,
+      com linguagem acessível e uma história clara?
+    nota_alta: Pode ser resumida em duas frases compreensíveis por qualquer leitor.
+    nota_baixa: Exige conhecimento técnico profundo para ser compreendida.
