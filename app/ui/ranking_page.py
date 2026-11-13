@@ -1,13 +1,15 @@
-"""Tela de ranking: filtros na barra lateral e lista de artigos ordenada por nota."""
+"""Tela de ranking: filtros na barra lateral, lista de artigos e validação humana."""
 from __future__ import annotations
 
 import streamlit as st
 
 from app.schemas.ranking_schema import RankedArticle, VersionView
+from app.services.validation_service import ValidationError
 from app.ui import data
 from app.ui.formatting import (
     article_label,
     escape_markdown,
+    find_validation,
     format_authors,
     format_date,
     progress_value,
@@ -19,8 +21,21 @@ def _version_label(version: VersionView) -> str:
     return f"{version.label} · {version.created_at:%d/%m/%Y} · {version.config_hash[:7]}"
 
 
+def _render_reviewer_picker() -> str:
+    """Quem está validando: lista fixa (REVISORES) ou campo livre se a lista estiver vazia."""
+    st.sidebar.header("Revisor")
+    names = data.reviewers()
+    if names:
+        return st.sidebar.selectbox(
+            "Quem está validando?", names, index=None, placeholder="Escolha seu nome"
+        ) or ""
+    return st.sidebar.text_input("Seu nome").strip()
+
+
 def _render_sidebar() -> dict | None:
     """Desenha os filtros e devolve as escolhas; None se ainda não há análises."""
+    reviewer = _render_reviewer_picker()
+
     st.sidebar.header("Filtros")
 
     versions = [v for v in data.load_versions() if data.load_models(v.id)]
@@ -53,6 +68,7 @@ def _render_sidebar() -> dict | None:
         "version": version,
         "model": model,
         "shown": int(shown),
+        "reviewer": reviewer,
         "filters": dict(
             min_score=min_score,
             only_highlights=only_highlights,
@@ -85,19 +101,63 @@ def _render_analysis_tab(item: RankedArticle, version: VersionView) -> None:
             st.caption(escape_markdown(justification))
 
 
-def _render_validations_tab(item: RankedArticle) -> None:
-    if not item.validations:
-        st.caption("Nenhum jornalista validou esta análise ainda.")
+def _render_validation_form(item: RankedArticle, reviewer: str) -> None:
+    st.markdown("**Sua validação**")
+    if not reviewer:
+        st.info("Escolha seu nome na barra lateral para validar.")
         return
-    for v in item.validations:
-        verdict = "concorda" if v.agrees else "discorda"
-        st.markdown(f"**{v.reviewer_name}** {verdict} · {v.validated_at:%d/%m/%Y %H:%M}")
-        if v.comment:
-            st.caption(escape_markdown(v.comment))
+    existing = find_validation(item.validations, reviewer)
+    if existing:
+        st.caption("Você já validou este artigo. Enviar de novo atualiza a sua resposta.")
+
+    options = ["Concordo", "Discordo"]
+    index = None if existing is None else (0 if existing.agrees else 1)
+    with st.form(f"validation-{item.analysis_id}"):
+        choice = st.radio(
+            "A nota e a justificativa da IA fazem sentido?",
+            options,
+            index=index,
+            horizontal=True,
+            key=f"agrees-{item.analysis_id}",
+        )
+        comment = st.text_area(
+            "Comentário (opcional)",
+            value=(existing.comment or "") if existing else "",
+            key=f"comment-{item.analysis_id}",
+        )
+        submitted = st.form_submit_button("Salvar validação")
+
+    if not submitted:
+        return
+    if choice is None:
+        st.warning("Escolha Concordo ou Discordo antes de salvar.")
+        return
+    try:
+        data.submit_validation(item.analysis_id, reviewer, choice == "Concordo", comment)
+    except ValidationError as error:
+        st.error(str(error))
+        return
+    st.session_state["flash"] = f"Validação de {reviewer} salva."
+    st.session_state["last_validated"] = item.analysis_id
+    st.rerun()
 
 
-def _render_article(item: RankedArticle, version: VersionView) -> None:
-    with st.expander(article_label(item)):
+def _render_validations_tab(item: RankedArticle, reviewer: str) -> None:
+    if item.validations:
+        for v in item.validations:
+            verdict = "concorda" if v.agrees else "discorda"
+            st.markdown(f"**{v.reviewer_name}** {verdict} · {v.validated_at:%d/%m/%Y %H:%M}")
+            if v.comment:
+                st.caption(escape_markdown(v.comment))
+    else:
+        st.caption("Nenhum jornalista validou esta análise ainda.")
+    st.divider()
+    _render_validation_form(item, reviewer)
+
+
+def _render_article(item: RankedArticle, version: VersionView, reviewer: str) -> None:
+    just_validated = st.session_state.get("last_validated") == item.analysis_id
+    with st.expander(article_label(item), expanded=just_validated):
         meta = [format_authors(item.authors)]
         if item.source_name:
             meta.append(f"*{escape_markdown(item.source_name)}*")
@@ -117,11 +177,14 @@ def _render_article(item: RankedArticle, version: VersionView) -> None:
         with tab_abstract:
             st.write(item.abstract or "Resumo não disponível.")
         with tab_validation:
-            _render_validations_tab(item)
+            _render_validations_tab(item, reviewer)
 
 
 def render() -> None:
     choices = _render_sidebar()
+    flash = st.session_state.pop("flash", None)
+    if flash:
+        st.success(flash)
     if choices is None:
         st.info("Ainda não há análises. Rode o pipeline: `poetry run python -m app.cli`.")
         return
@@ -141,4 +204,4 @@ def render() -> None:
     shown = choices["shown"]
     st.caption(f"Mostrando {min(shown, len(items))} de {len(items)}, da maior para a menor nota.")
     for item in items[:shown]:
-        _render_article(item, version)
+        _render_article(item, version, choices["reviewer"])

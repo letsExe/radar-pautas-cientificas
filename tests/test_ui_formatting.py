@@ -45,3 +45,10 @@ def test_rotulo_do_artigo():
 def test_barra_de_progresso_fica_entre_0_e_1():
     assert f.progress_value(5) == 0.5
     assert f.progress_value(-2) == 0.0 and f.progress_value(14) == 1.0
+
+
+def test_encontra_a_validacao_do_revisor():
+    when = datetime(2026, 11, 1, tzinfo=timezone.utc)
+    vs = (ValidationView("Ana", True, None, when), ValidationView("Bia", False, "x", when))
+    assert f.find_validation(vs, "Bia").agrees is False
+    assert f.find_validation(vs, "Carlos") is None

@@ -44,3 +44,14 @@ def article_label(item: RankedArticle, max_title: int = 110) -> str:
 def progress_value(score: float, scale: float = 10.0) -> float:
     """Converte a nota (0 a 10) em fração de 0 a 1 para a barra de progresso."""
     return min(max(score / scale, 0.0), 1.0)
+
+
+
+def find_validation(
+    validations: Sequence[ValidationView], reviewer_name: str
+) -> ValidationView | None:
+    """Validação já feita por este revisor, se houver."""
+    for validation in validations:
+        if validation.reviewer_name == reviewer_name:
+            return validation
+    return None

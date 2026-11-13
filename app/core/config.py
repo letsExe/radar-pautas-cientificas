@@ -17,11 +17,20 @@ class Settings:
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "90"))
     llm_delay_seconds: float = float(os.getenv("LLM_DELAY_SECONDS", "4"))
+    
+    reviewers: tuple[str, ...] = tuple(
+        name.strip() for name in os.getenv("REVISORES", "").split(",") if name.strip()
+    )
 
     def require_database_url(self) -> str:
         if not self.database_url:
             raise RuntimeError("DATABASE_URL não definida. Preencha o arquivo .env.")
         return self.database_url
+
+    def require_institution_id(self) -> str:
+        if not self.openalex_institution_id:
+            raise RuntimeError("UNILA_OPENALEX_ID não definida. Preencha o arquivo .env.")
+        return self.openalex_institution_id
 
 
 settings = Settings()
