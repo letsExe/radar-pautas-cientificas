@@ -55,3 +55,13 @@ def find_validation(
         if validation.reviewer_name == reviewer_name:
             return validation
     return None
+
+
+
+def format_percent(rate: float | None) -> str:
+    return "—" if rate is None else f"{rate:.0%}"
+
+
+def version_label(version) -> str:
+    """Rótulo da versão dos critérios nos seletores (rótulo, data e início do hash)."""
+    return f"{version.label} · {version.created_at:%d/%m/%Y} · {version.config_hash[:7]}"

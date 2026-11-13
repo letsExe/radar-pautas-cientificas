@@ -14,11 +14,8 @@ from app.ui.formatting import (
     format_date,
     progress_value,
     validation_summary,
+    version_label,
 )
-
-
-def _version_label(version: VersionView) -> str:
-    return f"{version.label} · {version.created_at:%d/%m/%Y} · {version.config_hash[:7]}"
 
 
 def _render_reviewer_picker() -> str:
@@ -41,7 +38,7 @@ def _render_sidebar() -> dict | None:
     versions = [v for v in data.load_versions() if data.load_models(v.id)]
     if not versions:
         return None
-    version = st.sidebar.selectbox("Versão dos critérios", versions, format_func=_version_label)
+    version = st.sidebar.selectbox("Versão dos critérios", versions, format_func=version_label)
     model = st.sidebar.selectbox("Modelo de IA", data.load_models(version.id))
 
     min_score = st.sidebar.slider("Nota mínima", 0.0, 10.0, 0.0, 0.5)

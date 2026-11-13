@@ -16,6 +16,11 @@ from app.schemas.ranking_schema import RankedArticle, RankingFilters, VersionVie
 from app.services.ranking_service import RankingService
 from app.services.validation_service import ValidationService
 
+from app.repositories.analysis_repository import AnalysisRepository
+from app.repositories.article_repository import ArticleRepository
+from app.schemas.overview_schema import Overview
+from app.services.overview_service import OverviewService
+
 CACHE_SECONDS = 300
 
 
@@ -64,6 +69,17 @@ def load_ranking(
     )
     with session_scope() as session:
         return _service(session).get_ranking(version_id, model, filters)
+
+
+@st.cache_data(ttl=CACHE_SECONDS, show_spinner="Calculando a visão geral...")
+def load_overview(version_id: str, model: str) -> Overview:
+    with session_scope() as session:
+        service = OverviewService(
+            ArticleRepository(session),
+            AnalysisRepository(session),
+            _service(session),
+        )
+        return service.get_overview(version_id, model)
 
 
 def reviewers() -> tuple[str, ...]:

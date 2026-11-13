@@ -52,3 +52,12 @@ def test_encontra_a_validacao_do_revisor():
     vs = (ValidationView("Ana", True, None, when), ValidationView("Bia", False, "x", when))
     assert f.find_validation(vs, "Bia").agrees is False
     assert f.find_validation(vs, "Carlos") is None
+
+
+
+def test_percentual_e_rotulo_da_versao():
+    from types import SimpleNamespace
+
+    assert f.format_percent(None) == "—" and f.format_percent(2 / 3) == "67%"
+    version = SimpleNamespace(label="v1", created_at=datetime(2026, 11, 3, tzinfo=timezone.utc), config_hash="6e37c198a877")
+    assert f.version_label(version) == "v1 · 03/11/2026 · 6e37c19"
