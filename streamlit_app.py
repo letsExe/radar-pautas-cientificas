@@ -1,7 +1,19 @@
 """Ponto de entrada da interface: poetry run streamlit run streamlit_app.py"""
+import os
+
 import streamlit as st
 
-from app.ui import overview_page, ranking_page
+from app.core.secrets_env import export_to_environ
+
+# No Streamlit Community Cloud as configurações ficam em "Secrets". Copiamos para o ambiente
+# ANTES de importar o resto, porque o config.py lê as variáveis ao ser importado.
+# Localmente não há secrets: vale o .env.
+try:
+    export_to_environ(st.secrets, os.environ)
+except Exception:
+    pass
+
+from app.ui import overview_page, ranking_page  # noqa: E402
 
 st.set_page_config(page_title="Radar de Pautas Científicas", page_icon="📡", layout="wide")
 
